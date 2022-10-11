@@ -20,8 +20,11 @@ class MysqlDB:
             print(e)
 
     # 返回执行execute()方法后影响的行数 
-    def execute(self, sql):
-        self.cursor.execute(sql)
+    def execute(self, sql, tupledata=None):
+        if tupledata is None:
+            self.cursor.execute(sql)
+        else:
+            self.cursor.execute(sql, tupledata)
         rowcount = self.cursor.rowcount
         return rowcount
 
@@ -39,7 +42,8 @@ class MysqlDB:
             self.conn.commit()
             # 影响的行数
             rowcount = self.cursor.rowcount
-        except:
+        except pymysql.InternalError as e:
+            print("Mysql Error %d: %s" % (e.args[0], e.args[1]))
             # 发生错误时回滚
             self.conn.rollback()
         return rowcount
@@ -51,9 +55,11 @@ class MysqlDB:
         sql = 'insert into %s(' % table
         fields = ""
         values = ""
+        vdata = []
         for k, v in kwargs.items():
-            fields += "%s," % k
-            values += "'%s'," % v
+            fields += "`%s`," % k
+            values += "%s,"
+            vdata.append(v)
         fields = fields.rstrip(',')
         values = values.rstrip(',')
         sql = sql + fields + ")values(" + values + ")"
@@ -61,39 +67,42 @@ class MysqlDB:
         res = []
         try:
             # 执行SQL语句
-            self.cursor.execute(sql)
+            self.cursor.execute(sql, tuple(vdata))
             # 提交到数据库执行
             self.conn.commit()
             # 获取自增id
             res = self.cursor.lastrowid
-        except:
+        except pymysql.InternalError as e:
+            print("Mysql Error %d: %s" % (e.args[0], e.args[1]))
             # 发生错误时回滚
             self.conn.rollback()
         return res
 
     # 修改数据并返回影响的行数
-
     def update(self, **kwargs):
         table = kwargs['table']
         # del kwargs['table']
         kwargs.pop('table')
         where = kwargs['where']
         kwargs.pop('where')
+        vdata = []
         sql = 'update %s set ' % table
         for k, v in kwargs.items():
-            sql += "%s='%s'," % (k, v)
+            sql += f"`{k}`=%s,"
+            vdata.append(v)
         sql = sql.rstrip(',')
         sql += ' where %s' % where
         print(sql)
         rowcount = 0
         try:
             # 执行SQL语句
-            self.cursor.execute(sql)
+            self.cursor.execute(sql, tuple(vdata))
             # 提交到数据库执行
             self.conn.commit()
             # 影响的行数
             rowcount = self.cursor.rowcount
-        except:
+        except pymysql.InternalError as e:
+            print("Mysql Error %d: %s" % (e.args[0], e.args[1]))
             # 发生错误时回滚
             self.conn.rollback()
         return rowcount
@@ -112,7 +121,8 @@ class MysqlDB:
             self.cursor.execute(sql)
             # 使用 fetchone() 方法获取单条数据.
             data = self.cursor.fetchone()
-        except:
+        except pymysql.InternalError as e:
+            print("Mysql Error %d: %s" % (e.args[0], e.args[1]))
             # 发生错误时回滚
             self.conn.rollback()
         return data
@@ -130,7 +140,8 @@ class MysqlDB:
             self.cursor.execute(sql)
             # 使用 fetchone() 方法获取单条数据.
             data = self.cursor.fetchall()
-        except:
+        except pymysql.InternalError as e:
+            print("Mysql Error %d: %s" % (e.args[0], e.args[1]))
             # 发生错误时回滚
             self.conn.rollback()
         return list(data)
