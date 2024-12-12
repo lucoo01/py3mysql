@@ -2,6 +2,14 @@
 Python3 连接Mysql简单的增删改查封装
 
 ## 使用方法
+安装扩张
+```
+pip install pymysql
+```
+导入包
+```python
+from  MysqlDB import MysqlDB
+```
 
 ```sql
 -- 生成实例
