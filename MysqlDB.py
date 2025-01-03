@@ -19,7 +19,7 @@ class MysqlDB:
         except Exception as e:
             print(e)
 
-    # 返回执行execute()方法后影响的行数 
+    # 返回执行execute()方法后影响的行数 
     def execute(self, sql, tupledata=None):
         if tupledata is None:
             self.cursor.execute(sql)
